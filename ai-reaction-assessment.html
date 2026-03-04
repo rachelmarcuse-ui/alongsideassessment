@@ -1,0 +1,1028 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AI Reaction Assessment — Alongside</title>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;1,400&family=Inter:wght@300;400;500&display=swap" rel="stylesheet">
+  <style>
+    /* ── Variables ── */
+    :root {
+      --cream:      #F5F0E6;
+      --cream-card: #FAF7F2;
+      --gold:       #B8920C;
+      --gold-hover: #9E7C0A;
+      --gold-light: #F5EDDA;
+      --text-dark:  #2A2520;
+      --text-mid:   #5A5248;
+      --text-light: #8A847C;
+      --border:     #E0D8C8;
+      --sidebar-w:  48px;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: var(--cream);
+      color: var(--text-dark);
+      font-family: 'Inter', -apple-system, sans-serif;
+      font-size: 16px;
+      line-height: 1.6;
+      min-height: 100vh;
+      margin-left: var(--sidebar-w);
+    }
+
+    /* ── Sidebar wordmark ── */
+    .sidebar {
+      position: fixed;
+      left: 0; top: 0; bottom: 0;
+      width: var(--sidebar-w);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-right: 1px solid var(--border);
+      background: var(--cream);
+      z-index: 100;
+    }
+    .wordmark {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+    }
+    .wordmark span {
+      font-family: 'Playfair Display', Georgia, serif;
+      font-size: 11px;
+      color: var(--text-dark);
+      letter-spacing: 0.04em;
+      line-height: 1;
+    }
+
+    /* ── Header ── */
+    .site-header {
+      padding: 20px 40px;
+      border-bottom: 1px solid var(--border);
+    }
+    .logo {
+      font-family: 'Courier New', monospace;
+      font-size: 17px;
+      color: var(--text-dark);
+      letter-spacing: -0.3px;
+    }
+
+    /* ── Screens ── */
+    .screen { display: none; }
+    .screen.active { display: block; }
+
+    /* ── Layout ── */
+    .inner { max-width: 700px; margin: 0 auto; padding: 0 40px; }
+
+    /* ── Shared labels ── */
+    .label-tag {
+      display: inline-block;
+      font-size: 11px;
+      font-weight: 500;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--gold);
+      margin-bottom: 16px;
+    }
+
+    /* ── Intro ── */
+    .intro-wrap { padding: 60px 0 80px; }
+    .intro-title {
+      font-family: 'Playfair Display', Georgia, serif;
+      font-size: 42px;
+      line-height: 1.2;
+      margin-bottom: 30px;
+    }
+    .intro-body {
+      font-size: 17px;
+      color: var(--text-mid);
+      line-height: 1.85;
+      margin-bottom: 16px;
+    }
+    .intro-meta { font-size: 14px; color: var(--text-light); margin: 10px 0 44px; }
+
+    /* ── Buttons ── */
+    .btn-primary {
+      background: var(--gold);
+      color: #fff;
+      border: none;
+      padding: 15px 32px;
+      font-size: 16px;
+      font-family: 'Inter', sans-serif;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: background 0.18s;
+    }
+    .btn-primary:hover { background: var(--gold-hover); }
+
+    .btn-secondary {
+      background: transparent;
+      color: var(--text-mid);
+      border: 1px solid var(--border);
+      padding: 13px 26px;
+      font-size: 15px;
+      font-family: 'Inter', sans-serif;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: border-color 0.15s, color 0.15s;
+    }
+    .btn-secondary:hover { border-color: var(--text-mid); color: var(--text-dark); }
+
+    /* ── Section header ── */
+    .section-head { padding: 48px 0 30px; }
+    .section-num {
+      font-size: 11px;
+      font-weight: 500;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--gold);
+      margin-bottom: 12px;
+    }
+    .section-title {
+      font-family: 'Playfair Display', Georgia, serif;
+      font-size: 30px;
+      line-height: 1.3;
+      margin-bottom: 12px;
+    }
+    .section-prompt { font-size: 15px; color: var(--text-mid); line-height: 1.75; }
+
+    /* ── Progress ── */
+    .progress-wrap { padding: 0 0 24px; }
+    .progress-meta { display: flex; justify-content: space-between; font-size: 12px; color: var(--text-light); margin-bottom: 8px; }
+    .progress-track { background: var(--border); height: 3px; border-radius: 2px; }
+    .progress-fill { background: var(--gold); height: 3px; border-radius: 2px; transition: width 0.4s ease; }
+
+    /* ── Scale legend ── */
+    .scale-legend { display: flex; justify-content: space-between; font-size: 12px; color: var(--text-light); margin-bottom: 20px; }
+
+    /* ── Question blocks ── */
+    .q-block {
+      background: var(--cream-card);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 22px 24px;
+      margin-bottom: 12px;
+    }
+    .q-emotion {
+      font-size: 10px;
+      font-weight: 500;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--gold);
+      margin-bottom: 6px;
+    }
+    .q-text { font-size: 15px; color: var(--text-dark); line-height: 1.65; margin-bottom: 20px; }
+
+    /* ── Likert ── */
+    .likert { display: flex; gap: 8px; justify-content: space-between; }
+    .lk-opt { flex: 1; display: flex; flex-direction: column; align-items: center; cursor: pointer; }
+    .lk-opt input[type="radio"] { display: none; }
+    .lk-circle {
+      width: 42px; height: 42px; border-radius: 50%;
+      border: 2px solid var(--border); background: var(--cream);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 13px; font-weight: 500; color: var(--text-mid);
+      transition: border-color 0.13s, background 0.13s, color 0.13s;
+      margin-bottom: 5px;
+    }
+    .lk-opt:hover .lk-circle { border-color: var(--gold); color: var(--gold); }
+    .lk-opt input[type="radio"]:checked + .lk-circle { background: var(--gold); border-color: var(--gold); color: #fff; }
+    .lk-lbl { font-size: 10px; color: var(--text-light); text-align: center; line-height: 1.3; }
+
+    /* ── Nav row ── */
+    .nav-row { display: flex; align-items: center; justify-content: flex-end; gap: 12px; padding: 16px 0 80px; }
+    .val-msg { font-size: 13px; color: #b94040; display: none; margin-right: auto; }
+    .val-msg.show { display: block; }
+
+    /* ── Transition screen ── */
+    .transition-outer {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: calc(100vh - 62px);
+    }
+    .transition-wrap {
+      max-width: 560px;
+      padding: 60px 40px;
+      text-align: center;
+    }
+    .transition-rule {
+      width: 40px;
+      height: 2px;
+      background: var(--gold);
+      margin: 0 auto 36px;
+    }
+    .transition-title {
+      font-family: 'Playfair Display', Georgia, serif;
+      font-size: 32px;
+      line-height: 1.3;
+      margin-bottom: 28px;
+      color: var(--text-dark);
+    }
+    .transition-body {
+      font-size: 16px;
+      color: var(--text-mid);
+      line-height: 1.9;
+      margin-bottom: 14px;
+    }
+    .transition-wrap .btn-primary { margin-top: 40px; }
+    .transition-back {
+      display: block;
+      margin-top: 16px;
+      font-size: 13px;
+      color: var(--text-light);
+      cursor: pointer;
+      background: none;
+      border: none;
+      font-family: 'Inter', sans-serif;
+    }
+    .transition-back:hover { color: var(--text-mid); }
+
+    /* ── Results ── */
+    .results-intro { padding: 56px 0 36px; }
+    .results-title {
+      font-family: 'Playfair Display', Georgia, serif;
+      font-size: 36px;
+      line-height: 1.2;
+      margin-bottom: 16px;
+    }
+    .results-intro > p { font-size: 15px; color: var(--text-mid); line-height: 1.85; }
+
+    /* Pattern label card */
+    .pattern-label-card {
+      background: var(--text-dark);
+      border-radius: 10px;
+      padding: 28px 30px;
+      margin-bottom: 44px;
+    }
+    .pattern-label-eyebrow {
+      font-size: 10px;
+      font-weight: 500;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: rgba(255,255,255,0.5);
+      margin-bottom: 8px;
+    }
+    .pattern-label-text {
+      font-family: 'Playfair Display', Georgia, serif;
+      font-size: 26px;
+      color: #fff;
+      line-height: 1.3;
+      margin-bottom: 10px;
+    }
+    .pattern-label-desc {
+      font-size: 14px;
+      color: rgba(255,255,255,0.62);
+      line-height: 1.75;
+    }
+
+    /* Res sections */
+    .res-section { padding: 0 0 44px; }
+    .res-section-title {
+      font-family: 'Playfair Display', Georgia, serif;
+      font-size: 22px;
+      margin-bottom: 20px;
+      padding-bottom: 14px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    /* Reaction map */
+    .reaction-map { }
+    .rm-legend {
+      display: flex;
+      gap: 20px;
+      margin-bottom: 18px;
+      font-size: 12px;
+      color: var(--text-light);
+      flex-wrap: wrap;
+    }
+    .rm-legend-item { display: flex; align-items: center; gap: 6px; }
+    .rm-dot { width: 10px; height: 10px; border-radius: 2px; flex-shrink: 0; }
+    .rm-row { display: flex; align-items: center; gap: 12px; padding: 7px 0; }
+    .rm-label { font-size: 13px; color: var(--text-mid); width: 88px; flex-shrink: 0; text-align: right; }
+    .rm-label.top { color: var(--text-dark); font-weight: 500; }
+    .rm-track { flex: 1; background: var(--border); height: 8px; border-radius: 4px; }
+    .rm-fill { height: 8px; border-radius: 4px; transition: width 0.7s ease; }
+    .rm-fill.sig-top { background: var(--gold); }
+    .rm-fill.sig-mid { background: #C4B89A; }
+    .rm-fill.sig-low { background: #DDD7CB; }
+    .rm-score { font-size: 12px; color: var(--text-light); width: 38px; text-align: right; flex-shrink: 0; }
+    .rm-score.top { color: var(--gold); font-weight: 500; }
+
+    /* Readiness */
+    .readiness-card {
+      background: var(--cream-card);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 26px 28px;
+    }
+    .readiness-header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 16px;
+      margin-bottom: 14px;
+    }
+    .readiness-name {
+      font-family: 'Playfair Display', Georgia, serif;
+      font-size: 22px;
+    }
+    .readiness-badge {
+      background: var(--gold-light);
+      color: var(--gold);
+      font-size: 11px;
+      font-weight: 500;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      padding: 5px 12px;
+      border-radius: 20px;
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+    .readiness-desc { font-size: 15px; color: var(--text-mid); line-height: 1.8; }
+
+    /* Emotion cards */
+    .em-card { background: var(--cream-card); border: 1px solid var(--border); border-radius: 10px; padding: 24px 26px; margin-bottom: 12px; }
+    .em-card-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; }
+    .em-name { font-family: 'Playfair Display', Georgia, serif; font-size: 22px; }
+    .em-score { font-size: 13px; color: var(--text-light); }
+    .score-track { background: var(--border); height: 4px; border-radius: 2px; margin-bottom: 16px; }
+    .score-fill { background: var(--gold); height: 4px; border-radius: 2px; }
+    .em-interp { font-size: 15px; color: var(--text-mid); line-height: 1.8; }
+
+    /* Alignment table */
+    .align-table-wrap { overflow-x: auto; margin-bottom: 16px; }
+    table.align-table { width: 100%; border-collapse: collapse; font-size: 14px; }
+    .align-table th {
+      text-align: left;
+      font-size: 10px;
+      font-weight: 500;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--text-light);
+      padding: 0 10px 12px;
+      border-bottom: 2px solid var(--border);
+    }
+    .align-table th:first-child { padding-left: 0; }
+    .align-table td { padding: 10px 10px; border-bottom: 1px solid var(--border); color: var(--text-mid); vertical-align: middle; }
+    .align-table td:first-child { padding-left: 0; font-size: 13px; font-weight: 500; color: var(--text-dark); }
+    .align-table tr:last-child td { border-bottom: none; }
+    .align-table tr.is-top td { background: var(--gold-light); }
+    .score-pip {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 28px; height: 28px;
+      border-radius: 50%;
+      font-size: 13px;
+      font-weight: 500;
+    }
+    .pip-low  { background: #EDEAD4; color: var(--text-light); }
+    .pip-mid  { background: var(--border); color: var(--text-mid); }
+    .pip-high { background: var(--gold-light); color: var(--gold); }
+    .pip-top  { background: var(--gold); color: #fff; }
+    .gap-flag { font-size: 11px; color: #b04040; font-style: italic; }
+    .top-star { color: var(--gold); margin-left: 4px; font-size: 11px; }
+    .align-insight-box {
+      font-size: 14px;
+      color: var(--text-mid);
+      line-height: 1.75;
+      padding: 18px 20px;
+      background: var(--cream-card);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      margin-top: 4px;
+    }
+
+    /* Conversations */
+    .conv-list { list-style: none; margin-bottom: 14px; }
+    .conv-list li { display: flex; gap: 14px; padding: 16px 0; border-bottom: 1px solid var(--border); }
+    .conv-list li:last-child { border-bottom: none; }
+    .conv-arrow { color: var(--gold); font-size: 16px; flex-shrink: 0; margin-top: 2px; }
+    .conv-q { font-size: 15px; color: var(--text-dark); line-height: 1.65; margin-bottom: 4px; }
+    .conv-ctx { font-size: 12px; color: var(--text-light); line-height: 1.5; }
+    .conv-note { font-size: 14px; color: var(--text-light); line-height: 1.65; }
+
+    /* Pattern */
+    .pattern-card { background: var(--cream-card); border: 1px solid var(--border); border-radius: 10px; padding: 28px; }
+    .pattern-card p { font-size: 15px; color: var(--text-mid); line-height: 1.85; margin-bottom: 14px; }
+    .pattern-card p:last-child { margin-bottom: 0; }
+
+    /* Closing */
+    .closing-wrap { padding: 0 0 80px; }
+    .closing-wrap > p { font-size: 16px; color: var(--text-mid); line-height: 1.85; margin-bottom: 28px; }
+    .cta-card { background: var(--gold); border-radius: 10px; padding: 32px; }
+    .cta-card p { color: rgba(255,255,255,0.88); font-size: 15px; line-height: 1.8; margin-bottom: 22px; }
+    .btn-cta {
+      background: #fff;
+      color: var(--gold);
+      border: none;
+      padding: 13px 26px;
+      font-size: 15px;
+      font-family: 'Inter', sans-serif;
+      font-weight: 500;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+    .btn-cta:hover { background: rgba(255,255,255,0.9); }
+
+    /* ── Mobile ── */
+    @media (max-width: 640px) {
+      body { margin-left: 0; }
+      .sidebar { display: none; }
+      .site-header { padding: 16px 20px; }
+      .inner { padding: 0 20px; }
+      .intro-title { font-size: 28px; }
+      .section-title, .results-title { font-size: 24px; }
+      .lk-circle { width: 36px; height: 36px; font-size: 12px; }
+      .lk-lbl { display: none; }
+      .rm-label { width: 72px; font-size: 12px; }
+      .readiness-header { flex-direction: column; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ── Sidebar ── -->
+<div class="sidebar">
+  <div class="wordmark">
+    <span>A</span><span>L</span><span>O</span><span>N</span><span>G</span><span>S</span><span>I</span><span>D</span><span>E</span>
+  </div>
+</div>
+
+<!-- ── Header ── -->
+<header class="site-header">
+  <span class="logo">Alongside</span>
+</header>
+
+<!-- ════════════════════════════════════════════════
+     INTRO
+════════════════════════════════════════════════ -->
+<div id="screen-intro" class="screen active">
+  <div class="inner">
+    <div class="intro-wrap">
+      <span class="label-tag">Organizational Assessment</span>
+      <h1 class="intro-title">The AI Reaction Assessment for Organizations</h1>
+      <p class="intro-body">Artificial intelligence is often framed as a technical shift. But inside organizations, the biggest barriers to adoption are rarely technical. They are emotional.</p>
+      <p class="intro-body">People experience AI through a range of reactions — curiosity, skepticism, fear, excitement, resistance, and moral concern. These reactions are not problems to eliminate. They are signals about what people need in order to engage with change.</p>
+      <p class="intro-body">Effective AI adoption requires more than new tools. It requires intentional change management — understanding the human dynamics that shape how people respond, and creating the conditions where productive experimentation can actually happen.</p>
+      <p class="intro-body">This assessment is designed to surface the emotional landscape in your organization and help identify where change management support is most needed.</p>
+      <p class="intro-meta">The assessment takes about 7 minutes.</p>
+      <button class="btn-primary" onclick="startAssessment()">Begin Assessment</button>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════════
+     SECTION 1 — Personal
+════════════════════════════════════════════════ -->
+<div id="screen-s1" class="screen">
+  <div class="inner">
+    <div class="section-head">
+      <p class="section-num">Section 1 of 4</p>
+      <h2 class="section-title">Your Personal Reaction to AI</h2>
+      <p class="section-prompt">Thinking about your own relationship to AI at work, how strongly do you agree with the following statements?</p>
+    </div>
+    <div class="progress-wrap">
+      <div class="progress-meta"><span>Progress</span><span>1 of 4</span></div>
+      <div class="progress-track"><div class="progress-fill" style="width:5%"></div></div>
+    </div>
+    <div class="scale-legend"><span>1 — Strongly disagree</span><span>5 — Strongly agree</span></div>
+    <div id="qs-s1"></div>
+    <div class="nav-row">
+      <span class="val-msg" id="val-s1">Please answer all questions before continuing.</span>
+      <button class="btn-secondary" onclick="goTo('screen-intro')">Back</button>
+      <button class="btn-primary" onclick="advance(1)">Continue</button>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════════
+     SECTION 2 — Leadership
+════════════════════════════════════════════════ -->
+<div id="screen-s2" class="screen">
+  <div class="inner">
+    <div class="section-head">
+      <p class="section-num">Section 2 of 4</p>
+      <h2 class="section-title">How Leaders Talk About AI</h2>
+      <p class="section-prompt">In your experience, how do leaders in your organization tend to talk about AI?</p>
+    </div>
+    <div class="progress-wrap">
+      <div class="progress-meta"><span>Progress</span><span>2 of 4</span></div>
+      <div class="progress-track"><div class="progress-fill" style="width:28%"></div></div>
+    </div>
+    <div class="scale-legend"><span>1 — Strongly disagree</span><span>5 — Strongly agree</span></div>
+    <div id="qs-s2"></div>
+    <div class="nav-row">
+      <span class="val-msg" id="val-s2">Please answer all questions before continuing.</span>
+      <button class="btn-secondary" onclick="goTo('screen-s1')">Back</button>
+      <button class="btn-primary" onclick="advance(2)">Continue</button>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════════
+     SECTION 3 — Culture
+════════════════════════════════════════════════ -->
+<div id="screen-s3" class="screen">
+  <div class="inner">
+    <div class="section-head">
+      <p class="section-num">Section 3 of 4</p>
+      <h2 class="section-title">Organizational Culture</h2>
+      <p class="section-prompt">Thinking about your coworkers and the broader culture of your organization, how strongly do you think people generally feel the following?</p>
+    </div>
+    <div class="progress-wrap">
+      <div class="progress-meta"><span>Progress</span><span>3 of 4</span></div>
+      <div class="progress-track"><div class="progress-fill" style="width:54%"></div></div>
+    </div>
+    <div class="scale-legend"><span>1 — Strongly disagree</span><span>5 — Strongly agree</span></div>
+    <div id="qs-s3"></div>
+    <div class="nav-row">
+      <span class="val-msg" id="val-s3">Please answer all questions before continuing.</span>
+      <button class="btn-secondary" onclick="goTo('screen-s2')">Back</button>
+      <button class="btn-primary" onclick="advance(3)">Continue</button>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════════
+     SECTION 4 — Orientation
+════════════════════════════════════════════════ -->
+<div id="screen-s4" class="screen">
+  <div class="inner">
+    <div class="section-head">
+      <p class="section-num">Section 4 of 4</p>
+      <h2 class="section-title">Orientation Toward AI Experimentation</h2>
+      <p class="section-prompt">People often hold both skepticism and curiosity about AI at the same time. This section explores whether interest in experimentation exists alongside concerns.</p>
+    </div>
+    <div class="progress-wrap">
+      <div class="progress-meta"><span>Progress</span><span>4 of 4</span></div>
+      <div class="progress-track"><div class="progress-fill" style="width:78%"></div></div>
+    </div>
+    <div class="scale-legend"><span>1 — Strongly disagree</span><span>5 — Strongly agree</span></div>
+    <div id="qs-s4"></div>
+    <div class="nav-row">
+      <span class="val-msg" id="val-s4">Please answer all questions before continuing.</span>
+      <button class="btn-secondary" onclick="goTo('screen-s3')">Back</button>
+      <button class="btn-primary" onclick="advance(4)">Continue</button>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════════
+     TRANSITION
+════════════════════════════════════════════════ -->
+<div id="screen-transition" class="screen">
+  <div class="inner">
+    <div class="transition-outer">
+      <div class="transition-wrap">
+        <div class="transition-rule"></div>
+        <h2 class="transition-title">AI reactions are rarely simple.</h2>
+        <p class="transition-body">Most people experience several reactions at once — curiosity alongside skepticism, excitement alongside concern.</p>
+        <p class="transition-body">This assessment highlights patterns that often appear together inside organizations.</p>
+        <p class="transition-body">The goal isn't to label your organization, but to help surface conversations that might otherwise stay unspoken.</p>
+        <button class="btn-primary" onclick="renderAndShow()">See Your Results</button>
+        <button class="transition-back" onclick="goTo('screen-s4')">← Go back</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════════
+     RESULTS
+════════════════════════════════════════════════ -->
+<div id="screen-results" class="screen">
+  <div class="inner">
+
+    <div class="results-intro">
+      <span class="label-tag">Organizational Diagnostic</span>
+      <h1 class="results-title">Your AI Reaction Profile</h1>
+      <p>This assessment highlights the emotional reactions most present in your experience and organizational context. These reactions are not problems to be managed away — they are signals about what people need, where trust may be thin, and what change management support is most likely to help.</p>
+    </div>
+
+    <!-- 1. Pattern label -->
+    <div id="pattern-label"></div>
+
+    <!-- 2. Reaction Map -->
+    <div class="res-section">
+      <h2 class="res-section-title">AI Reaction Map</h2>
+      <div id="reaction-map"></div>
+    </div>
+
+    <!-- 3. Top Emotions -->
+    <div class="res-section">
+      <h2 class="res-section-title">Your Strongest Signals</h2>
+      <div id="top-emotions"></div>
+    </div>
+
+    <!-- 4. Readiness -->
+    <div class="res-section">
+      <h2 class="res-section-title">Experimentation Readiness</h2>
+      <div id="readiness"></div>
+    </div>
+
+    <!-- 5. Alignment Table -->
+    <div class="res-section">
+      <h2 class="res-section-title">Leader &amp; Organization Alignment</h2>
+      <p style="font-size:15px;color:var(--text-mid);line-height:1.75;margin-bottom:18px;">Gaps between personal reactions, leadership messaging, and organizational culture often reveal where change management attention is most needed. Highlighted rows (★) are your three strongest signals.</p>
+      <div id="alignment"></div>
+    </div>
+
+    <!-- 6. Conversations -->
+    <div class="res-section">
+      <h2 class="res-section-title">Suggested Leadership Conversations</h2>
+      <p style="font-size:15px;color:var(--text-mid);line-height:1.75;margin-bottom:18px;">Based on the patterns in your results, these conversations tend to move organizations from insight to productive experimentation — and from experimentation to intentional change:</p>
+      <ul class="conv-list" id="conversations"></ul>
+      <p class="conv-note">These conversations help teams move from abstract debate to practical exploration, and from exploration to intentional change management.</p>
+    </div>
+
+    <!-- 7. Pattern we often see -->
+    <div class="res-section">
+      <h2 class="res-section-title">A Pattern We Often See</h2>
+      <div class="pattern-card" id="pattern-text"></div>
+    </div>
+
+    <!-- 8. Closing -->
+    <div class="closing-wrap">
+      <p>Emotional reactions to AI are not barriers to overcome. They are signals about how people experience change. Understanding those signals is often the first step toward thoughtful experimentation and effective change management.</p>
+      <div class="cta-card">
+        <p>If you'd like help interpreting these results or designing practical AI adoption strategies for your organization, Alongside Advisors works with teams to navigate the human side of technological change.</p>
+        <button class="btn-cta" onclick="window.open('https://alongsideadvisors.com/contact','_blank')">Contact Alongside Advisors</button>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════════
+     JAVASCRIPT
+════════════════════════════════════════════════ -->
+<script>
+
+/* ── Data ─────────────────────────────────────────────────────────────── */
+
+const EMOTIONS = ['Fear','Grief','Alienation','Overwhelm','Dread','Suspicion','Guilt','Disgust','Hype'];
+const POSITIVE  = ['Curiosity','Pragmatism','Agency','Optimism'];
+
+const SECTIONS = [
+  {
+    id:'s1', count:9,
+    qs:[
+      {e:'Fear',       t:'I fear AI will eventually replace my job.'},
+      {e:'Grief',      t:'Part of what I love about my work feels like it\'s being diminished by AI.'},
+      {e:'Alienation', t:'AI tools seem designed for people very different from me.'},
+      {e:'Overwhelm',  t:'The pace of AI development feels impossible to keep up with.'},
+      {e:'Dread',      t:'Adopting AI will likely make my workload worse.'},
+      {e:'Suspicion',  t:'Leadership enthusiasm for AI seems disconnected from the reality of day‑to‑day work.'},
+      {e:'Guilt',      t:'Using AI can feel like participating in something ethically questionable.'},
+      {e:'Disgust',    t:'Something about AI feels fundamentally wrong or inauthentic.'},
+      {e:'Hype',       t:'The excitement around AI feels exaggerated.'},
+    ]
+  },
+  {
+    id:'s2', count:9,
+    qs:[
+      {e:'Fear',       t:'Leadership frames AI primarily as a way to increase efficiency or reduce labor.'},
+      {e:'Grief',      t:'Leadership discussions of AI rarely acknowledge the craft or identity aspects of work.'},
+      {e:'Alienation', t:'Leadership assumes AI will be easy for everyone to adopt.'},
+      {e:'Overwhelm',  t:'Leadership underestimates how quickly expectations around AI are changing.'},
+      {e:'Dread',      t:'Leadership messaging about AI creates more pressure than clarity.'},
+      {e:'Suspicion',  t:'Leadership messaging about AI feels disconnected from the reality of daily work.'},
+      {e:'Guilt',      t:'Leadership rarely addresses ethical concerns around AI use.'},
+      {e:'Disgust',    t:'Leadership tends to dismiss strong emotional reactions to AI.'},
+      {e:'Hype',       t:'Leadership messaging about AI feels overly optimistic.'},
+    ]
+  },
+  {
+    id:'s3', count:9,
+    qs:[
+      {e:'Fear',       t:'People in my organization worry AI will eventually replace jobs.'},
+      {e:'Grief',      t:'People feel aspects of their craft or professional identity may be diminished by AI.'},
+      {e:'Alienation', t:'Many people feel AI tools were designed for a different type of worker.'},
+      {e:'Overwhelm',  t:'People feel the gap between current skills and AI expectations is too large.'},
+      {e:'Dread',      t:'People believe AI adoption will increase workload rather than reduce it.'},
+      {e:'Suspicion',  t:'People distrust leadership narratives about AI.'},
+      {e:'Guilt',      t:'People worry that using AI may contribute to outcomes they believe are harmful.'},
+      {e:'Disgust',    t:'Some people experience a visceral rejection of AI technology.'},
+      {e:'Hype',       t:'Many people believe the current excitement around AI is exaggerated.'},
+    ]
+  },
+  {
+    id:'s4', count:4,
+    qs:[
+      {e:'Curiosity',  t:'I\'m interested in exploring how AI could improve parts of my work.'},
+      {e:'Pragmatism', t:'I believe there are specific tasks where AI could be genuinely useful.'},
+      {e:'Agency',     t:'I feel capable of experimenting with AI tools if given time and support.'},
+      {e:'Optimism',   t:'Thoughtful AI adoption could improve how our organization works.'},
+    ]
+  }
+];
+
+const INTERP = {
+  Fear:       'High fear scores suggest people worry AI adoption is primarily about reducing labor costs rather than augmenting human capability. When fear is present, transparency about the actual intentions behind AI initiatives matters more than almost anything else. Effective change management begins with honest answers to the question: what is this actually for?',
+  Grief:      'Grief responses often emerge when people feel aspects of their craft or professional identity are being diminished. This is especially common in fields where expertise, judgment, and creative process are central to how people understand their work. Acknowledging this reaction — rather than bypassing it — is often what makes genuine experimentation possible.',
+  Alienation: 'High alienation scores suggest that AI tools — and the conversations around them — feel designed for a different kind of worker. People may sense that their expertise, context, or work style wasn\'t considered in adoption decisions. Participatory change management, where people help identify their own use cases, tends to work better than top-down implementation.',
+  Overwhelm:  'When overwhelm scores high, people often feel the pace of change is unrealistic. The gap between expectations and capacity may feel too large to close. In these environments, adoption often stalls not because people oppose AI, but because they can\'t see a realistic path to engaging with it. Slowing down is often the fastest path forward.',
+  Dread:      'High dread scores indicate that people expect AI adoption to increase burden rather than reduce it. This often reflects past experience with technology rollouts that added complexity without reducing workload. Small, demonstrably pressure-reducing experiments tend to do more for organizational trust than any amount of optimistic messaging.',
+  Suspicion:  'High suspicion often signals a trust gap between leadership narratives and the lived reality of work. People may feel AI enthusiasm is disconnected from how work actually happens day to day. This is a change management challenge as much as a technology one — and it is often resolved through honest dialogue rather than a better communication strategy.',
+  Guilt:      'When guilt scores are high, people feel ethically uncertain about AI use. Questions about privacy, bias, job displacement, or creative authenticity may be active but unaddressed. Creating structured space for these conversations — rather than dismissing them as obstacles — tends to generate more trust and, ultimately, more productive experimentation.',
+  Disgust:    'High disgust scores often reflect a deep sense that AI represents something fundamentally inauthentic or violating. This is a values-based concern, not primarily a practical one. Forcing adoption when disgust is present tends to intensify resistance. Starting with genuine dialogue about values and organizational identity tends to be more effective than starting with tools.',
+  Hype:       'High hype skepticism suggests that people find current AI enthusiasm exaggerated relative to demonstrated value. This is often a healthy signal — people are waiting for evidence before committing. Low-pressure, evidence-based experimentation that produces visible, honest results tends to work well when skepticism about hype is high.'
+};
+
+const CONV_PROMPTS = {
+  Fear:       {q:'What is the actual intention behind our AI adoption — and how can we communicate it more honestly?',         ctx:'Helps surface transparency and trust-building needs.'},
+  Grief:      {q:'Which aspects of our craft or expertise do we most want to protect as we explore AI?',                      ctx:'Centers identity and professional values in the conversation.'},
+  Alienation: {q:'Who has been left out of our AI conversations so far, and how can we involve them?',                        ctx:'Opens up participatory design and inclusion.'},
+  Overwhelm:  {q:'What would a slower, more sustainable pace of AI experimentation look like for our team?',                   ctx:'Reframes change management as capacity-building, not urgency.'},
+  Dread:      {q:'Where might AI actually reduce pressure rather than add to it — and what would a small test look like?',     ctx:'Shifts from abstract concern to concrete, low-risk experimentation.'},
+  Suspicion:  {q:'What would it take for people to trust that our AI direction is aligned with their interests?',              ctx:'Surfaces the gap between leadership intent and staff experience.'},
+  Guilt:      {q:'What ethical guardrails do we want in place before we go further with AI?',                                 ctx:'Creates space for values-grounded decision-making.'},
+  Disgust:    {q:'What organizational values do we want to hold onto — and where does AI feel like it threatens them?',        ctx:'Grounds the conversation in identity and principles, not tools.'},
+  Hype:       {q:'What evidence of real value would it take for people to genuinely engage with AI here?',                    ctx:'Moves from promise to proof as the basis for adoption.'},
+  universal:  {q:'What part of our work do we most want to protect?',                                                         ctx:'A foundational question for any AI change management process.'},
+  experiment: {q:'What would a small, safe, low-risk experiment with AI look like for this team?',                           ctx:'Moves from conversation to concrete action.'}
+};
+
+const READINESS_LEVELS = {
+  'Experiment Ready':     'Curiosity and a sense of agency are strong, and concern about burden is relatively low. This is a favorable foundation for AI experimentation. The priority is creating structured opportunities to explore and learn — supported by good change management to capture and share what works.',
+  'Cautious but Curious': 'Interest in experimentation exists alongside meaningful concern. People may be willing to try if conditions feel safe and the process feels manageable. This is a common and productive starting point — it calls for low-pressure experimentation and honest change management rather than enthusiasm campaigns.',
+  'Emotionally Blocked':  'Concern about pace and burden is high enough to make experimentation feel unrealistic right now. This isn\'t opposition — it\'s a signal that the conditions for experimentation haven\'t yet been established. Effective change management here means slowing down, building trust, and reducing cognitive load before introducing new tools.',
+  'Trust Repair Needed':  'Significant emotional barriers are present alongside low readiness to experiment. Trust — in leadership intentions, in the process, or in the technology itself — may need repair before productive experimentation is possible. This calls for intentional change management: listening, transparency, and small acts of credibility-building.'
+};
+
+const PATTERN_LABELS = {
+  'Experiment Ready':             'Openness and curiosity are present. The conditions for productive AI experimentation are relatively favorable.',
+  'Cautious but Curious':         'People are interested but uncertain. Thoughtful change management can convert that curiosity into productive action.',
+  'Curious but Overwhelmed':      'Genuine interest in AI exists, but the pace and expectations feel unsustainable. Slowing down may be the fastest path forward.',
+  'Skeptical but Engaged':        'Skepticism about hype or leadership messaging coexists with willingness to engage. Evidence-based experimentation tends to work well here.',
+  'Emotionally Blocked':          'Strong emotional reactions are limiting the conditions for experimentation. Trust and capacity need to be rebuilt before tools can be introduced.',
+  'Trust Gap Around AI':          'A significant gap exists between organizational readiness and trust in the process. Change management — not technology — is the priority.',
+  'Leadership–Staff Misalignment':'There is a meaningful disconnect between how leaders talk about AI and how it is experienced day to day. Bridging this gap is the first change management priority.',
+  'Deep Organizational Skepticism':'Multiple layers of concern are present. Honest, transparent engagement is more important right now than any adoption strategy.',
+  'Complex Emotional Landscape':  'Several strong reactions are present simultaneously. A nuanced, human-centered change management approach is most likely to help.'
+};
+
+/* ── State ────────────────────────────────────────────────────────────── */
+const R = {s1:{}, s2:{}, s3:{}, s4:{}};
+
+/* ── Build questions ──────────────────────────────────────────────────── */
+function buildSection(sec) {
+  const wrap = document.getElementById('qs-' + sec.id);
+  wrap.innerHTML = '';
+  sec.qs.forEach(function(q, i) {
+    const div = document.createElement('div');
+    div.className = 'q-block';
+    div.innerHTML =
+      '<p class="q-emotion">' + q.e + '</p>' +
+      '<p class="q-text">' + q.t + '</p>' +
+      '<div class="likert">' +
+        [1,2,3,4,5].map(function(v) {
+          return '<label class="lk-opt">' +
+            '<input type="radio" name="' + sec.id + '-' + i + '" value="' + v + '" onchange="R[\'' + sec.id + '\'][\'' + q.e + '\']=' + v + '">' +
+            '<div class="lk-circle">' + v + '</div>' +
+            '<span class="lk-lbl">' + (v===1?'Strongly<br>disagree':v===5?'Strongly<br>agree':'') + '</span>' +
+          '</label>';
+        }).join('') +
+      '</div>';
+    wrap.appendChild(div);
+  });
+}
+
+function startAssessment() {
+  SECTIONS.forEach(buildSection);
+  goTo('screen-s1');
+}
+
+function goTo(id) {
+  document.querySelectorAll('.screen').forEach(function(s){ s.classList.remove('active'); });
+  document.getElementById(id).classList.add('active');
+  window.scrollTo(0,0);
+}
+
+function advance(n) {
+  var sid = 's' + n;
+  var answered = Object.keys(R[sid]).length;
+  var needed   = SECTIONS[n-1].count;
+  var msg = document.getElementById('val-' + sid);
+  if (answered < needed) { msg.classList.add('show'); return; }
+  msg.classList.remove('show');
+  goTo(n < 4 ? 'screen-s' + (n+1) : 'screen-transition');
+}
+
+function renderAndShow() {
+  renderResults();
+  goTo('screen-results');
+}
+
+/* ── Scoring ──────────────────────────────────────────────────────────── */
+function computeScores() {
+  var scores = {};
+  EMOTIONS.forEach(function(e) {
+    var p = R.s1[e]||0, l = R.s2[e]||0, o = R.s3[e]||0;
+    scores[e] = {personal:p, leadership:l, org:o, total:p+l+o};
+  });
+  POSITIVE.forEach(function(e) {
+    scores[e] = {personal: R.s4[e]||0};
+  });
+  return scores;
+}
+
+function computeReadiness(scores) {
+  var curiosity    = R.s4['Curiosity']||0;
+  var agency       = R.s4['Agency']||0;
+  var overwhelmAvg = scores['Overwhelm'].total / 3;
+  var dreadAvg     = scores['Dread'].total / 3;
+  return (curiosity + agency) - (overwhelmAvg + dreadAvg);
+}
+
+function readinessTier(raw) {
+  if (raw >= 4)  return 'Experiment Ready';
+  if (raw >= 1)  return 'Cautious but Curious';
+  if (raw >= -2) return 'Emotionally Blocked';
+  return 'Trust Repair Needed';
+}
+
+function computePatternLabel(top3, readiness, personalVsLeaderGap) {
+  if (personalVsLeaderGap > 1.5)                                                        return 'Leadership–Staff Misalignment';
+  if (readiness === 'Trust Repair Needed')                                               return 'Trust Gap Around AI';
+  if (readiness === 'Emotionally Blocked')                                               return 'Emotionally Blocked';
+  if (top3.includes('Suspicion') && top3.includes('Fear'))                              return 'Deep Organizational Skepticism';
+  if (readiness === 'Cautious but Curious' && (top3.includes('Overwhelm') || top3.includes('Dread'))) return 'Curious but Overwhelmed';
+  if (readiness === 'Cautious but Curious' && (top3.includes('Suspicion') || top3.includes('Hype')))  return 'Skeptical but Engaged';
+  if (readiness === 'Experiment Ready')                                                  return 'Experiment Ready';
+  return 'Complex Emotional Landscape';
+}
+
+function pipClass(v) {
+  if (!v) return 'pip-low';
+  if (v >= 5) return 'pip-top';
+  if (v >= 4) return 'pip-high';
+  if (v >= 3) return 'pip-mid';
+  return 'pip-low';
+}
+
+/* ── Render ───────────────────────────────────────────────────────────── */
+function renderResults() {
+  var scores  = computeScores();
+  var sorted  = EMOTIONS.slice().sort(function(a,b){ return scores[b].total - scores[a].total; });
+  var top3    = sorted.slice(0,3);
+  var rawR    = computeReadiness(scores);
+  var readiness = readinessTier(rawR);
+  var pAvg    = top3.reduce(function(s,e){ return s+scores[e].personal; }, 0) / top3.length;
+  var lAvg    = top3.reduce(function(s,e){ return s+scores[e].leadership; }, 0) / top3.length;
+  var gap     = pAvg - lAvg;
+  var label   = computePatternLabel(top3, readiness, gap);
+
+  renderPatternLabel(label);
+  renderReactionMap(scores, sorted, top3);
+  renderTopEmotions(scores, top3);
+  renderReadiness(readiness);
+  renderAlignmentTable(scores, top3, gap);
+  renderConversations(top3);
+  renderPattern(top3, readiness);
+}
+
+function renderPatternLabel(label) {
+  document.getElementById('pattern-label').innerHTML =
+    '<div class="pattern-label-card" style="margin-bottom:44px;">' +
+      '<p class="pattern-label-eyebrow">Your Organization\'s AI Reaction Pattern</p>' +
+      '<p class="pattern-label-text">' + label + '</p>' +
+      '<p class="pattern-label-desc">' + (PATTERN_LABELS[label]||'') + '</p>' +
+    '</div>';
+}
+
+function renderReactionMap(scores, sorted, top3) {
+  var html =
+    '<div class="rm-legend">' +
+      '<span class="rm-legend-item"><span class="rm-dot" style="background:var(--gold)"></span>Top signals</span>' +
+      '<span class="rm-legend-item"><span class="rm-dot" style="background:#C4B89A"></span>Moderate</span>' +
+      '<span class="rm-legend-item"><span class="rm-dot" style="background:#DDD7CB"></span>Lower</span>' +
+    '</div>' +
+    '<div class="reaction-map">';
+
+  sorted.forEach(function(e) {
+    var s    = scores[e].total;
+    var isTop = top3.includes(e);
+    var pct  = Math.round((s/15)*100);
+    var tier = isTop ? 'sig-top' : (s >= 8 ? 'sig-mid' : 'sig-low');
+    html +=
+      '<div class="rm-row">' +
+        '<span class="rm-label' + (isTop?' top':'') + '">' + e + '</span>' +
+        '<div class="rm-track"><div class="rm-fill ' + tier + '" style="width:' + pct + '%"></div></div>' +
+        '<span class="rm-score' + (isTop?' top':'') + '">' + s + '/15</span>' +
+      '</div>';
+  });
+
+  html += '</div>';
+  document.getElementById('reaction-map').innerHTML = html;
+}
+
+function renderTopEmotions(scores, top3) {
+  var el = document.getElementById('top-emotions');
+  el.innerHTML = '';
+  top3.forEach(function(e) {
+    var s   = scores[e];
+    var pct = Math.round((s.total/15)*100);
+    el.innerHTML +=
+      '<div class="em-card">' +
+        '<div class="em-card-head">' +
+          '<span class="em-name">' + e + '</span>' +
+          '<span class="em-score">' + s.total + ' / 15</span>' +
+        '</div>' +
+        '<div class="score-track"><div class="score-fill" style="width:' + pct + '%"></div></div>' +
+        '<p class="em-interp">' + INTERP[e] + '</p>' +
+      '</div>';
+  });
+}
+
+function renderReadiness(readiness) {
+  document.getElementById('readiness').innerHTML =
+    '<div class="readiness-card">' +
+      '<div class="readiness-header">' +
+        '<span class="readiness-name">Experimentation Readiness</span>' +
+        '<span class="readiness-badge">' + readiness + '</span>' +
+      '</div>' +
+      '<p class="readiness-desc">' + READINESS_LEVELS[readiness] + '</p>' +
+    '</div>';
+}
+
+function renderAlignmentTable(scores, top3, gap) {
+  var tableHtml =
+    '<div class="align-table-wrap">' +
+      '<table class="align-table">' +
+        '<thead><tr>' +
+          '<th>Emotion</th><th>You</th><th>Leadership</th><th>Organization</th><th></th>' +
+        '</tr></thead>' +
+        '<tbody>';
+
+  EMOTIONS.forEach(function(e) {
+    var s      = scores[e];
+    var isTop  = top3.includes(e);
+    var rowGap = Math.abs(s.personal - s.leadership);
+    var flag   = rowGap >= 2 ? '<span class="gap-flag">Gap</span>' : '';
+    var star   = isTop ? '<span class="top-star">★</span>' : '';
+    tableHtml +=
+      '<tr' + (isTop?' class="is-top"':'') + '>' +
+        '<td>' + e + star + '</td>' +
+        '<td><span class="score-pip ' + pipClass(s.personal) + '">' + (s.personal||'—') + '</span></td>' +
+        '<td><span class="score-pip ' + pipClass(s.leadership) + '">' + (s.leadership||'—') + '</span></td>' +
+        '<td><span class="score-pip ' + pipClass(s.org) + '">' + (s.org||'—') + '</span></td>' +
+        '<td>' + flag + '</td>' +
+      '</tr>';
+  });
+
+  tableHtml += '</tbody></table></div>';
+
+  var insight = '';
+  if (gap > 1.5) {
+    insight = 'There is a meaningful gap between personal reactions and leadership messaging. Leaders may be communicating optimism while employees are experiencing significantly more concern. This disconnect is a common change management challenge — and it tends to worsen when left unaddressed. Structured, open conversation tends to close this gap more effectively than any communication strategy alone.';
+  } else if (gap < -1.0) {
+    insight = 'Leadership appears to be expressing more caution about AI than is felt day-to-day. This may signal that leadership messaging isn\'t connecting with how people actually experience their work. Checking in informally can surface useful information that formal channels miss.';
+  } else {
+    insight = 'Personal reactions and leadership messaging appear reasonably aligned. This is a good foundation for productive experimentation. Even so, alignment at the top doesn\'t always mean alignment across the organization — it\'s worth verifying that front-line experience reflects what leadership perceives.';
+  }
+
+  document.getElementById('alignment').innerHTML =
+    tableHtml +
+    '<div class="align-insight-box">' + insight + '</div>';
+}
+
+function renderConversations(top3) {
+  var prompts = [CONV_PROMPTS[top3[0]], CONV_PROMPTS[top3[1]], CONV_PROMPTS.experiment];
+  document.getElementById('conversations').innerHTML = prompts.map(function(p) {
+    return '<li>' +
+      '<span class="conv-arrow">→</span>' +
+      '<div>' +
+        '<div class="conv-q">' + p.q + '</div>' +
+        '<div class="conv-ctx">' + p.ctx + '</div>' +
+      '</div>' +
+    '</li>';
+  }).join('');
+}
+
+function renderPattern(top3, readiness) {
+  var e1 = top3[0].toLowerCase();
+  var e2 = top3[1].toLowerCase();
+
+  var p1 = 'When ' + e1 + ' and ' + e2 + ' are among the strongest signals, the challenge is often not the technology itself. It is the conditions surrounding the technology — whether the pace feels manageable, whether people trust the intentions behind it, and whether they feel they have genuine agency in how it gets used.';
+
+  var p2 = 'Organizations often need intentional change management alongside experimentation in order for AI adoption to succeed. This means acknowledging the emotional reality, creating genuine room for questions and concerns, and designing adoption processes that build trust rather than assuming it.';
+
+  var p3 = 'When organizations slow down enough to name these dynamics openly, AI experimentation tends to become much more productive. The goal is not to eliminate concern, but to create conditions where curiosity and concern can coexist — and where experimentation can happen at a pace people can actually sustain.';
+
+  if (readiness === 'Trust Repair Needed' || top3.includes('Suspicion')) {
+    p1 = 'When suspicion is strong, the gap between organizational narrative and lived experience is often large. People may have learned — through past experience with change initiatives — that the rhetoric doesn\'t always match what actually happens. That history matters, and effective change management acknowledges it directly.';
+  }
+
+  document.getElementById('pattern-text').innerHTML =
+    '<p>' + p1 + '</p><p>' + p2 + '</p><p>' + p3 + '</p>';
+}
+
+</script>
+</body>
+</html>
